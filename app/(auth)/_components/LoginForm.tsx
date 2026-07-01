@@ -120,7 +120,7 @@ export default function LoginForm() {
           disabled={isPending}
           className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold text-sm py-3 rounded-xl transition-all shadow-lg shadow-blue-500/10 active:scale-[0.99] disabled:opacity-70 mt-2"
         >
-          {isPending ? "Connecting to Lofix..." : "Login"}
+          {isPending ? "Logging" : "Login"}
         </button>
       </form>
 

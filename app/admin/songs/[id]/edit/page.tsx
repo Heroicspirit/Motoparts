@@ -194,7 +194,7 @@ export default function EditSongPage() {
             {song?.coverImage && (
               <div className="mb-4">
                 <img 
-                  src={`http://localhost:5000${song.coverImage}`} 
+                  src={`http://localhost:5001${song.coverImage}`} 
                   alt={song.title} 
                   className="w-32 h-32 object-cover rounded-lg"
                 />
@@ -227,7 +227,7 @@ export default function EditSongPage() {
             </label>
             {song?.audioUrl && (
               <audio controls className="w-full">
-                <source src={`http://localhost:5000${song.audioUrl}`} type="audio/mpeg" />
+                <source src={`http://localhost:5001${song.audioUrl}`} type="audio/mpeg" />
                 Your browser does not support the audio element.
               </audio>
             )}

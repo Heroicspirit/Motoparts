@@ -1,7 +1,7 @@
 import axios from "axios";
 import { getAuthToken } from "../cookie";
 
-const BASE_URL = 'http://localhost:5000/';
+const BASE_URL = 'http://localhost:5001/';
 const axiosInstance  = axios.create({
     baseURL : BASE_URL,
 });

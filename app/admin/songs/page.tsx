@@ -87,14 +87,14 @@ export default function AdminSongsPage() {
                       <p className="text-sm text-gray-600">by {song.artist?.name || 'Unknown Artist'}</p>
                       {song.audioUrl && (
                         <audio controls className="w-full mt-2">
-                          <source src={`http://localhost:5000${song.audioUrl}`} type="audio/mpeg" />
+                          <source src={`http://localhost:5001${song.audioUrl}`} type="audio/mpeg" />
                           Your browser does not support the audio element.
                         </audio>
                       )}
                     </div>
                     {song.coverImage && (
                       <img 
-                        src={`http://localhost:5000${song.coverImage}`} 
+                        src={`http://localhost:5001${song.coverImage}`} 
                         alt={song.title} 
                         className="w-20 h-20 rounded-lg object-cover"
                       />

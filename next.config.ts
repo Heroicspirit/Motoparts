@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const backendURL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5000";
+  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:5001";
 const IsDEV = backendURL.startsWith("http://localhost");
 
 const config: NextConfig = {
@@ -11,7 +11,7 @@ const config: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost",
-        port: "5000",
+        port: "5001",
         pathname: "/upload/**",
       },
     ],

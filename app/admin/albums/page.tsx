@@ -17,7 +17,7 @@ export default function AdminAlbumsPage() {
 
   const fetchAlbums = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/albums');
+      const response = await fetch('http://localhost:5001/api/albums');
       if (!response.ok) {
         throw new Error('Failed to fetch albums');
       }
@@ -32,7 +32,7 @@ export default function AdminAlbumsPage() {
 
   const fetchSongs = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/songs');
+      const response = await fetch('http://localhost:5001/api/songs');
       if (!response.ok) {
         throw new Error('Failed to fetch songs');
       }
@@ -45,7 +45,7 @@ export default function AdminAlbumsPage() {
 
   const deleteAlbum = async (albumId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/albums/${albumId}`, {
+      const response = await fetch(`http://localhost:5001/api/albums/${albumId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
@@ -59,7 +59,7 @@ export default function AdminAlbumsPage() {
 
   const deleteSong = async (songId: string) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/songs/${songId}`, {
+      const response = await fetch(`http://localhost:5001/api/songs/${songId}`, {
         method: 'DELETE',
       });
       if (!response.ok) {
