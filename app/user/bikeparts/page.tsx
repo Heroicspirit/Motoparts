@@ -280,9 +280,9 @@ export default function BikePartsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5">
+                      <Link href={`/user/bikeparts/${product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
                         Buy Now
-                      </button>
+                      </Link>
                       <button className="p-2.5 bg-[#181d29] hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl border border-slate-800/80 transition">
                         <ShoppingCart className="w-4 h-4" />
                       </button>
