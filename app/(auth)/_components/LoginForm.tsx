@@ -7,13 +7,28 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { loginSchema, type LoginValue } from "../schema";
 import { handleLogin } from "@/lib/actions/auth-action";
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 
 export default function LoginForm() {
   const router = useRouter();
   const [serverError, setServerError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const [isPending, startTransition] = useTransition(); 
+  const [isPending, startTransition] = useTransition();
+
+  // Handle Google OAuth callback
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const error = urlParams.get('error');
+
+    if (token) {
+      // Store token and redirect
+      document.cookie = `token=${token}; path=/; max-age=2592000`; // 30 days
+      router.replace('/user/dashboard');
+    } else if (error === 'google_auth_failed') {
+      setServerError('Google authentication failed. Please try again.');
+    }
+  }, [router]); 
 
   const {
     register,
@@ -135,6 +150,7 @@ export default function LoginForm() {
       {/* SSO GOOGLE INTEGRATION */}
       <button
         type="button"
+        onClick={() => window.location.href = 'http://localhost:5001/api/auth/google'}
         className="w-full bg-[#181d29] hover:bg-[#1f2535] border border-slate-800 text-slate-200 font-medium text-sm py-3 px-4 rounded-xl flex items-center justify-center gap-2.5 transition-colors"
       >
         <svg className="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="currentColor">

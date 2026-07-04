@@ -3,12 +3,15 @@
 import RegisterForm from "../_components/RegisterForm";
 
 export default function Page() {
-    return (
-        <div className="space-y-6 w-full">
-            <div className="text-center">
-                <p className="mt-1 text-sm text-foreground/70">Sign up to get started</p>
-            </div>
-            <RegisterForm />
-        </div>
-    );
+  return (
+    <div 
+      className="w-full h-full flex items-center justify-center px-6 md:px-12 transition-colors duration-200" 
+      style={{ backgroundColor: '#51638F' }}
+    >
+      {/* Retain layout structure bounds safely at page level */}
+      <div className="w-full max-w-[400px]">
+        <RegisterForm />
+      </div>
+    </div>
+  );
 }
