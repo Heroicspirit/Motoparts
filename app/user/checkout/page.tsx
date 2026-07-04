@@ -1,11 +1,64 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Lock, Truck, ShoppingBag, ArrowRight, ShieldCheck, RefreshCcw } from "lucide-react";
 import Header from "../_components/Header";
 import Link from "next/link";
+import { createOrder } from "@/lib/api/orders";
+import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    city: '',
+    address: ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // Mock order data - in real app, this would come from cart
+      const orderData = {
+        items: [
+          {
+            product: "mock-product-id",
+            title: "Akrapovič Slip-On Exhaust",
+            image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=500&q=80",
+            price: 1249.99,
+            quantity: 1
+          }
+        ],
+        shippingAddress: formData,
+        paymentMethod: 'cod',
+        subtotal: 1249.99,
+        shippingCost: 0,
+        total: 1249.99
+      };
+
+      const response = await createOrder(orderData);
+      if (response.success) {
+        router.push('/user/checkout/review');
+      }
+    } catch (error) {
+      console.error('Failed to create order:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#0f1115] flex flex-col">
       <Header />
@@ -23,13 +76,16 @@ export default function CheckoutPage() {
                 <Truck size={20} className="text-slate-300" /> Shipping Information
               </h2>
               
-              <form className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* First Name */}
                   <div className="space-y-1.5">
                     <label className="text-sm text-slate-300">First Name</label>
                     <input 
                       type="text" 
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleChange}
                       placeholder="Enter first name" 
                       className="w-full bg-white border border-slate-200 rounded-md p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition" 
                     />
@@ -39,6 +95,9 @@ export default function CheckoutPage() {
                     <label className="text-sm text-slate-300">Last Name</label>
                     <input 
                       type="text" 
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleChange}
                       placeholder="Enter last name" 
                       className="w-full bg-white border border-slate-200 rounded-md p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition" 
                     />
@@ -48,6 +107,9 @@ export default function CheckoutPage() {
                     <label className="text-sm text-slate-300">Phone Number</label>
                     <input 
                       type="text" 
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange} 
                       placeholder="Enter phone number" 
                       className="w-full bg-white border border-slate-200 rounded-md p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition" 
                     />
@@ -57,6 +119,9 @@ export default function CheckoutPage() {
                     <label className="text-sm text-slate-300">City</label>
                     <input 
                       type="text" 
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
                       placeholder="Enter city" 
                       className="w-full bg-white border border-slate-200 rounded-md p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition" 
                     />
@@ -67,6 +132,9 @@ export default function CheckoutPage() {
                   <label className="text-sm text-slate-300">Building/Street/Landmark Address</label>
                   <input 
                     type="text" 
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
                     placeholder="Enter address details" 
                     className="w-full bg-white border border-slate-200 rounded-md p-3 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-blue-500 transition" 
                   />
@@ -147,9 +215,13 @@ export default function CheckoutPage() {
               </div>
 
               {/* Action Button */}
-              <Link href="/user/checkout/review" className="w-full bg-[#b3c5ff] hover:bg-[#a5b8ff] text-slate-900 font-bold text-sm py-3.5 px-4 rounded-md transition flex items-center justify-center gap-2 mt-4 text-center">
-                PROCEED TO PAY <ArrowRight size={16} />
-              </Link>
+              <button 
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#b3c5ff] hover:bg-[#a5b8ff] text-slate-900 font-bold text-sm py-3.5 px-4 rounded-md transition flex items-center justify-center gap-2 mt-4 text-center disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Processing...' : 'PROCEED TO PAY'} <ArrowRight size={16} />
+              </button>
 
               {/* Trust Badges */}
               <div className="grid grid-cols-2 gap-4 pt-4 text-[10px] sm:text-xs text-slate-400">

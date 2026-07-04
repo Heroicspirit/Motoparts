@@ -6,7 +6,7 @@ import { useState } from "react";
 import { Search, ShoppingCart, User } from "lucide-react";
 
 const NAV_LINKS = [
-    { href: "/", label: "Home" },
+    { href: "/user/dashboard", label: "Home" },
     { href: "/user/bikeparts", label: "Bike Parts" },
     { href: "/brands", label: "Brands" },
     { href: "/offers", label: "Offers" },
@@ -16,20 +16,20 @@ export default function Header() {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
 
-    const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname?.startsWith(href));
+    const isActive = (href: string) => pathname?.startsWith(href);
 
     return (
         <header className="sticky top-0 z-50 border-b border-slate-800/80 bg-[#0f1115]/90 backdrop-blur-md px-6 py-4">
             <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
               
               {/* Logo */}
-              <Link href="/" className="text-xl font-bold tracking-tight text-white hover:opacity-90 transition">
+              <Link href="/user/dashboard" className="text-xl font-bold tracking-tight text-white hover:opacity-90 transition">
                 Moto<span className="text-blue-400">Parts</span>
               </Link>
 
               {/* Navigation Links */}
               <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-400">
-                <Link href="/" className="text-white border-b-2 border-blue-400 pb-0.5">Home</Link>
+                <Link href="/user/dashboard" className="text-white border-b-2 border-blue-400 pb-0.5">Home</Link>
                 <Link href="/user/bikeparts" className="hover:text-white transition">Bike Parts</Link>
                 <a href="#" className="hover:text-white transition">Brands</a>
                 <a href="#" className="hover:text-white transition">Offers</a>

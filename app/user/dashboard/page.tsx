@@ -1,7 +1,7 @@
 "use client";
 
-import React from "react";
-import { ShoppingCart, ArrowRight, Clock } from "lucide-react";
+import React, { useState } from "react";
+import { ShoppingCart, ArrowRight, Clock, CheckCircle2, X } from "lucide-react";
 import Header from "../_components/Header";
 import Link from "next/link";
 
@@ -13,10 +13,34 @@ const POPULAR_PRODUCTS = [
 ];
 
 export default function UserDashboardPage() {
+  const [showToast, setShowToast] = useState(false);
+
+  const handleAddToCart = () => {
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
   return (
     <div className="min-h-screen bg-[#0f1115] flex flex-col">
       <Header />
       <main className="flex-1 pb-16">
+      
+      {/* SUCCESS FLOATING TOAST NOTIFICATION */}
+      {showToast && (
+        <div className="fixed top-6 right-6 z-50 bg-[#1f2635] border border-slate-800 rounded-xl p-4 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
+          <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
+          <div className="text-left pr-4">
+            <p className="text-xs font-bold text-white">Added to cart successfully!</p>
+            <p className="text-[11px] text-slate-400">1 item added to your selection</p>
+          </div>
+          <button 
+            onClick={() => setShowToast(false)} 
+            className="text-slate-500 hover:text-slate-300 transition"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
       {/* HERO SECTION */}
       <section className="relative bg-gradient-to-b from-[#131722] to-[#0f1115] py-20 lg:py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
@@ -65,7 +89,7 @@ export default function UserDashboardPage() {
           {/* Split Container Right */}
           <div className="md:col-span-7 flex flex-col gap-6">
             {/* Top Row: Riding Gear */}
-            <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-t from-black/80 to-transparent border border-slate-800 h-[178px] flex items-end p-6">
+            <Link href="/user/ridinggear" className="group relative overflow-hidden rounded-2xl bg-gradient-to-t from-black/80 to-transparent border border-slate-800 h-[178px] flex items-end p-6 cursor-pointer">
               <img 
                 src="https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?w=800&q=80" 
                 alt="Riding Gear Helmet" 
@@ -74,10 +98,10 @@ export default function UserDashboardPage() {
               <div className="space-y-0.5">
                 <h3 className="text-lg font-bold text-white">Riding Gear</h3>
               </div>
-            </div>
+            </Link>
 
             {/* Bottom Row: Tires */}
-            <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-t from-black/80 to-transparent border border-slate-800 h-[178px] flex items-end p-6">
+            <Link href="/user/tires" className="group relative overflow-hidden rounded-2xl bg-gradient-to-t from-black/80 to-transparent border border-slate-800 h-[178px] flex items-end p-6 cursor-pointer">
               <img 
                 src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=800&q=80" 
                 alt="Motorcycle Tires" 
@@ -86,7 +110,7 @@ export default function UserDashboardPage() {
               <div className="space-y-0.5">
                 <h3 className="text-lg font-bold text-white">Tires</h3>
               </div>
-            </div>
+            </Link>
           </div>
         </div>
       </section>
@@ -118,9 +142,9 @@ export default function UserDashboardPage() {
               </div>
               <div className="flex items-center justify-between pt-4 mt-2 border-t border-slate-800/40">
                 <span className="text-base font-bold text-white">{product.price}</span>
-                <Link href="/user/cart" className="bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white p-2 rounded-full transition duration-200">
+                <button onClick={handleAddToCart} className="bg-blue-500/10 hover:bg-blue-500 text-blue-400 hover:text-white p-2 rounded-full transition duration-200">
                   <ShoppingCart className="w-4 h-4" />
-                </Link>
+                </button>
               </div>
             </div>
           ))}

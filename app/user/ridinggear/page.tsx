@@ -19,78 +19,78 @@ import { getProductsByCategory } from "@/lib/api/products";
 const MOCK_PRODUCTS = [
   {
     id: 1,
-    brand: "AKRAPOVIC",
-    title: "Evolution Line Titanium Exhaust",
-    price: "1,899.00",
-    originalPrice: "2,235.00",
+    brand: "ALPINESTARS",
+    title: "GP Plus Leather Suit",
+    price: "1,599.00",
+    originalPrice: "1,899.00",
     discount: "-15% OFF",
-    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80",
     inStock: true,
-    tag: null,
+    tag: "PREMIUM",
   },
   {
     id: 2,
-    brand: "AKRAPOVIC PERFORMANCE",
-    title: "SLIP-ON LINE TITANIUM EXHAUST SYSTEM",
-    price: "1,249.00",
-    originalPrice: "1,499.00",
-    discount: "-15% OFF",
-    image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=500&q=80",
+    brand: "REV'IT!",
+    title: "Sand 4 H2O Jacket",
+    price: "649.00",
+    originalPrice: null,
+    discount: null,
+    image: "https://images.unsplash.com/photo-1558981852-426c6c22a060?w=500&q=80",
     inStock: true,
     tag: null,
   },
   {
     id: 3,
-    brand: "BREMBO",
-    title: "GP4-RS Monoblock Calipers",
-    price: "899.95",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=500&q=80",
-    inStock: true,
-    tag: "LIMITED",
-  },
-  {
-    id: 4,
-    brand: "SHOEI",
-    title: "X-Fourteen Matte Black Racing Helmet",
-    price: "729.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?w=500&q=80",
+    brand: "DAINES",
+    title: "D1 Air Leather Jacket",
+    price: "899.00",
+    originalPrice: "1,099.00",
+    discount: "-18% OFF",
+    image: "https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=500&q=80",
     inStock: true,
     tag: null,
   },
   {
+    id: 4,
+    brand: "SHOEI",
+    title: "RF-1400 Helmet",
+    price: "599.00",
+    originalPrice: null,
+    discount: null,
+    image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?w=500&q=80",
+    inStock: true,
+    tag: "BESTSELLER",
+  },
+  {
     id: 5,
-    brand: "DID",
-    title: "520ERV7 Gold Racing Chain",
-    price: "185.00",
-    originalPrice: "205.00",
-    discount: "-10% OFF",
-    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80",
+    brand: "ALPINESTARS",
+    title: "Supertech M8 Helmet",
+    price: "799.00",
+    originalPrice: "899.00",
+    discount: "-11% OFF",
+    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=500&q=80",
     inStock: true,
     tag: null,
   },
   {
     id: 6,
-    brand: "DYNOJET",
-    title: "Power Commander VI Fuel Tuner",
-    price: "449.99",
+    brand: "REV'IT!",
+    title: "Tornado 2 H2O Pants",
+    price: "349.00",
     originalPrice: null,
     discount: null,
-    image: "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=500&q=80",
+    image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=500&q=80",
     inStock: true,
     tag: null,
   }
 ];
 
-export default function BikePartsPage() {
+export default function RidingGearPage() {
   const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(false);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [showToast, setShowToast] = useState(false);
-  const [selectedBrand, setSelectedBrand] = useState<string>("Öhlins");
+  const [selectedBrand, setSelectedBrand] = useState<string>("Alpinestars");
 
   useEffect(() => {
     fetchProducts();
@@ -99,7 +99,7 @@ export default function BikePartsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await getProductsByCategory('bike-parts');
+      const response = await getProductsByCategory('riding-gear');
       if (response.success && response.data) {
         setProducts(response.data.products || response.data);
       }
@@ -127,7 +127,7 @@ export default function BikePartsPage() {
       <Header />
       <main className="flex-1 p-6 lg:p-10">
       
-      {/* SUCCESS FLOATING TOAST NOTIFICATION (Matches top-right alert on image_fc133d.jpg) */}
+      {/* SUCCESS FLOATING TOAST NOTIFICATION */}
       {showToast && (
         <div className="fixed top-6 right-6 z-50 bg-[#1f2635] border border-slate-800 rounded-xl p-4 shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300">
           <CheckCircle2 className="w-5 h-5 text-blue-400 shrink-0" />
@@ -146,7 +146,7 @@ export default function BikePartsPage() {
 
       <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
         
-        {/* SIDEBAR FILTERS (Left column layout) */}
+        {/* SIDEBAR FILTERS */}
         <aside className="w-full lg:w-60 shrink-0 space-y-6">
           <div className="flex items-center justify-between pb-2 border-b border-slate-900">
             <h3 className="text-sm font-bold tracking-wider uppercase text-white">Filters</h3>
@@ -160,7 +160,7 @@ export default function BikePartsPage() {
               <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </div>
             <div className="space-y-2.5 pl-0.5">
-              {["Brembo", "Akrapovič", "Öhlins"].map((brand) => (
+              {["Alpinestars", "Rev'it!", "Dainese"].map((brand) => (
                 <label key={brand} className="flex items-center gap-3 text-xs text-slate-400 hover:text-slate-200 cursor-pointer select-none">
                   <input 
                     type="checkbox"
@@ -191,19 +191,19 @@ export default function BikePartsPage() {
             </div>
           </div>
 
-          {/* Compatibility Selector drop list */}
+          {/* Size Selector */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">Compatibility</span>
+              <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">Size</span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </div>
             <button className="w-full bg-[#111319] border border-slate-800/80 rounded-xl px-3 py-2.5 flex items-center justify-between text-xs text-slate-400 hover:border-slate-700 transition">
-              <span>Select Bike Model</span>
+              <span>Select Size</span>
               <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
             </button>
           </div>
 
-          {/* Availability Toggle options */}
+          {/* Availability Toggle */}
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-300 uppercase tracking-wide">Availability</span>
@@ -220,17 +220,17 @@ export default function BikePartsPage() {
           </div>
         </aside>
 
-        {/* PRODUCTS CATALOG MODULE (Right column layout) */}
+        {/* PRODUCTS CATALOG */}
         <div className="flex-1 space-y-6">
           
-          {/* List Toolbar Actions */}
+          {/* List Toolbar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-900">
             <div>
-              <h1 className="text-2xl font-bold text-white tracking-tight">Bike Parts</h1>
-              <p className="text-xs text-slate-500 pt-0.5">Showing 1-12 of 248 results</p>
+              <h1 className="text-2xl font-bold text-white tracking-tight">Riding Gear</h1>
+              <p className="text-xs text-slate-500 pt-0.5">Showing 1-12 of 156 results</p>
             </div>
 
-            {/* Catalog Sorting Options Selector */}
+            {/* Sorting Options */}
             <div className="flex items-center gap-2 self-end sm:self-auto">
               <span className="text-xs text-slate-500">Sort by:</span>
               <button className="bg-[#111319] border border-slate-800/80 rounded-xl px-4 py-2 flex items-center gap-3 text-xs font-semibold text-white hover:border-slate-700 transition">
@@ -240,12 +240,12 @@ export default function BikePartsPage() {
             </div>
           </div>
 
-          {/* Products Cards System Response Grid */}
+          {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product: any) => (
               <div key={product.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
                 
-                {/* Image Section Frame with Action Badge Layering */}
+                {/* Image Section */}
                 <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10] flex items-center justify-center">
                   {product.tag && (
                     <span className="absolute top-3 left-3 z-10 bg-blue-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
@@ -258,7 +258,7 @@ export default function BikePartsPage() {
                     </span>
                   )}
                   
-                  {/* Heart Wishlist Trigger */}
+                  {/* Heart Wishlist */}
                   <button 
                     onClick={() => toggleFavorite(product.id)}
                     className="absolute top-3 right-3 z-10 p-1.5 bg-[#0a0c10]/40 backdrop-blur-sm rounded-full text-slate-400 hover:text-rose-500 hover:scale-105 transition"
@@ -276,7 +276,7 @@ export default function BikePartsPage() {
                   />
                 </div>
 
-                {/* Information content block */}
+                {/* Information */}
                 <div className="space-y-3 flex-1 flex flex-col justify-between">
                   <div className="space-y-1">
                     <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">
@@ -292,7 +292,7 @@ export default function BikePartsPage() {
                     )}
                   </div>
 
-                  {/* Pricing Matrix & Purchase Trigger */}
+                  {/* Pricing */}
                   <div className="space-y-3 pt-1">
                     <div className="flex items-baseline gap-2">
                       <span className="text-sm font-bold text-white">
@@ -306,7 +306,7 @@ export default function BikePartsPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Link href={`/user/bikeparts/${product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
+                      <Link href={`/user/ridinggear/${product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
                         Buy Now
                       </Link>
                       <button onClick={handleAddToCart} className="p-2.5 bg-[#181d29] hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl border border-slate-800/80 transition">
@@ -320,7 +320,7 @@ export default function BikePartsPage() {
             ))}
           </div>
 
-          {/* Bottom Pagination Interface Control Footer */}
+          {/* Pagination */}
           <div className="flex items-center justify-center gap-2 pt-8">
             <button className="p-2 bg-[#111319] border border-slate-900 rounded-xl text-slate-500 hover:text-slate-300 transition disabled:opacity-40" disabled>
               <ChevronLeft className="w-4 h-4" />
