@@ -15,79 +15,9 @@ import Header from "../_components/Header";
 import Link from "next/link";
 import { getProductsByCategory } from "@/lib/api/products";
 
-// Mock Data fallback
-const MOCK_PRODUCTS = [
-  {
-    id: 1,
-    brand: "PIRELLI",
-    title: "Angel GT II Rear Tire",
-    price: "289.00",
-    originalPrice: "329.00",
-    discount: "-12% OFF",
-    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80",
-    inStock: true,
-    tag: "BESTSELLER",
-  },
-  {
-    id: 2,
-    brand: "MICHELIN",
-    title: "Road 6 Front Tire",
-    price: "319.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1558981852-426c6c22a060?w=500&q=80",
-    inStock: true,
-    tag: null,
-  },
-  {
-    id: 3,
-    brand: "BRIDGESTONE",
-    title: "Battlax S22 Rear Tire",
-    price: "269.00",
-    originalPrice: "299.00",
-    discount: "-10% OFF",
-    image: "https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=500&q=80",
-    inStock: true,
-    tag: null,
-  },
-  {
-    id: 4,
-    brand: "DUNLOP",
-    title: "SportSmart TT Front Tire",
-    price: "249.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?w=500&q=80",
-    inStock: true,
-    tag: "NEW",
-  },
-  {
-    id: 5,
-    brand: "CONTINENTAL",
-    title: "RoadAttack 4 Rear Tire",
-    price: "279.00",
-    originalPrice: "309.00",
-    discount: "-10% OFF",
-    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=500&q=80",
-    inStock: true,
-    tag: null,
-  },
-  {
-    id: 6,
-    brand: "METZELER",
-    title: "Roadtec 01 SE Front Tire",
-    price: "299.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=500&q=80",
-    inStock: true,
-    tag: null,
-  }
-];
-
 export default function TiresPage() {
-  const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>("Pirelli");
@@ -100,12 +30,12 @@ export default function TiresPage() {
     try {
       setLoading(true);
       const response = await getProductsByCategory('tires');
-      if (response.success && response.data) {
-        setProducts(response.data.products || response.data);
+      if (response.success) {
+        setProducts(response.data || response.products || []);
       }
     } catch (error) {
-      console.error('Failed to fetch products, using mock data:', error);
-      setProducts(MOCK_PRODUCTS);
+      console.error('Failed to fetch products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -255,7 +185,7 @@ export default function TiresPage() {
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product: any) => (
-              <div key={product.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
+              <div key={product._id || product.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
                 
                 {/* Image Section */}
                 <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10] flex items-center justify-center">
@@ -282,7 +212,7 @@ export default function TiresPage() {
                   </button>
 
                   <img 
-                    src={product.image} 
+                    src={product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`} 
                     alt={product.title} 
                     className="w-full h-full object-cover brightness-90 group-hover:scale-102 transition duration-300"
                   />
@@ -318,7 +248,7 @@ export default function TiresPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Link href={`/user/tires/${product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
+                      <Link href={`/user/tires/${product._id || product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
                         Buy Now
                       </Link>
                       <button onClick={handleAddToCart} className="p-2.5 bg-[#181d29] hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl border border-slate-800/80 transition">

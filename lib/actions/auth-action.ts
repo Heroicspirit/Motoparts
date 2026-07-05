@@ -48,7 +48,8 @@ export const handleLogin = async (formData : any) =>{
                 return {
                     success : true, 
                     message : 'Login Successful',
-                    data : result.data
+                    data : result.data,
+                    token: result.token
                 };
             }
 

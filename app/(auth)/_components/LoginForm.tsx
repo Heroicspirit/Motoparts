@@ -46,6 +46,10 @@ export default function LoginForm() {
         const result = await handleLogin(data);
 
         if (result.success) {
+          // Set cookies client-side for immediate access
+          document.cookie = `auth_token=${result.token}; path=/; max-age=2592000`;
+          document.cookie = `user_data=${encodeURIComponent(JSON.stringify(result.data))}; path=/; max-age=2592000`;
+          
           if (result.data?.role === 'admin') {
              router.replace("/admin");
           } else if (result.data?.role === 'user') {

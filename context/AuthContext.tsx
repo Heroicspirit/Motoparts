@@ -1,6 +1,5 @@
 "use client"
 import { createContext, useContext, useState, ReactNode, useEffect } from "react";
-import { clearAuthCookies, getAuthToken, getUserData } from "@/lib/cookie";
 import { useRouter } from "next/navigation";
 
 interface AuthContextProps {
@@ -8,9 +7,8 @@ interface AuthContextProps {
     setIsAuthenticated: (value: boolean) => void;
     user: any;
     setUser: (user: any) => void;
-    logout: () => Promise<void>;
+    logout: () => void;
     loading: boolean;
-    checkAuth: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -20,12 +18,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const [user, setUser] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
-    const checkAuth = async () => {
+
+    const checkAuth = () => {
         try {
-            const token = await getAuthToken();
-            const user = await getUserData();
-            setUser(user);
-            setIsAuthenticated(!!token);
+            const token = document.cookie.split('; ').find(row => row.startsWith('auth_token='));
+            const userData = document.cookie.split('; ').find(row => row.startsWith('user_data='));
+            
+            if (token) {
+                setIsAuthenticated(true);
+                if (userData) {
+                    const userJson = userData.split('=')[1];
+                    const parsedUser = JSON.parse(decodeURIComponent(userJson));
+                    setUser(parsedUser);
+                }
+            } else {
+                setIsAuthenticated(false);
+                setUser(null);
+            }
         } catch (err) {
             setIsAuthenticated(false);
             setUser(null);
@@ -38,19 +47,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         checkAuth();
     }, []);
 
-    const logout = async () => {
-        try {
-            await clearAuthCookies();
-            setIsAuthenticated(false);
-            setUser(null);
-            router.push("/login");
-        } catch (error) {
-            console.error("Logout failed:", error);
-        }
+    const logout = () => {
+        document.cookie = 'auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'user_data=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        setIsAuthenticated(false);
+        setUser(null);
+        router.push("/login");
     }
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, user, setUser, logout, loading, checkAuth }}>
+        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, user, setUser, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

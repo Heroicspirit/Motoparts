@@ -30,7 +30,7 @@ export default function OrderSuccessPage() {
             <div className="hidden md:flex items-center gap-6 text-xs font-bold text-slate-400 tracking-wide uppercase">
               <Link href="/user/bikeparts" className="hover:text-white transition">Bike Parts</Link>
               <Link href="/accessories" className="hover:text-white transition">Accessories</Link>
-              <Link href="/riding-gear" className="hover:text-white transition">Riding Gear</Link>
+              <Link href="/user/ridinggear" className="hover:text-white transition">Riding Gear</Link>
               <Link href="/brands" className="hover:text-white transition">Brands</Link>
               <Link href="/offers" className="hover:text-white transition">Offers</Link>
             </div>

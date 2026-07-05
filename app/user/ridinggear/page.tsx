@@ -15,79 +15,9 @@ import Header from "../_components/Header";
 import Link from "next/link";
 import { getProductsByCategory } from "@/lib/api/products";
 
-// Mock Data fallback
-const MOCK_PRODUCTS = [
-  {
-    id: 1,
-    brand: "ALPINESTARS",
-    title: "GP Plus Leather Suit",
-    price: "1,599.00",
-    originalPrice: "1,899.00",
-    discount: "-15% OFF",
-    image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=500&q=80",
-    inStock: true,
-    tag: "PREMIUM",
-  },
-  {
-    id: 2,
-    brand: "REV'IT!",
-    title: "Sand 4 H2O Jacket",
-    price: "649.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1558981852-426c6c22a060?w=500&q=80",
-    inStock: true,
-    tag: null,
-  },
-  {
-    id: 3,
-    brand: "DAINES",
-    title: "D1 Air Leather Jacket",
-    price: "899.00",
-    originalPrice: "1,099.00",
-    discount: "-18% OFF",
-    image: "https://images.unsplash.com/photo-1558981359-219d6364c9c8?w=500&q=80",
-    inStock: true,
-    tag: null,
-  },
-  {
-    id: 4,
-    brand: "SHOEI",
-    title: "RF-1400 Helmet",
-    price: "599.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?w=500&q=80",
-    inStock: true,
-    tag: "BESTSELLER",
-  },
-  {
-    id: 5,
-    brand: "ALPINESTARS",
-    title: "Supertech M8 Helmet",
-    price: "799.00",
-    originalPrice: "899.00",
-    discount: "-11% OFF",
-    image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=500&q=80",
-    inStock: true,
-    tag: null,
-  },
-  {
-    id: 6,
-    brand: "REV'IT!",
-    title: "Tornado 2 H2O Pants",
-    price: "349.00",
-    originalPrice: null,
-    discount: null,
-    image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=500&q=80",
-    inStock: true,
-    tag: null,
-  }
-];
-
 export default function RidingGearPage() {
-  const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<number[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>("Alpinestars");
@@ -99,13 +29,13 @@ export default function RidingGearPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await getProductsByCategory('riding-gear');
-      if (response.success && response.data) {
-        setProducts(response.data.products || response.data);
+      const response = await getProductsByCategory('ridinggear');
+      if (response.success) {
+        setProducts(response.data || response.products || []);
       }
     } catch (error) {
-      console.error('Failed to fetch products, using mock data:', error);
-      setProducts(MOCK_PRODUCTS);
+      console.error('Failed to fetch products:', error);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
@@ -243,7 +173,7 @@ export default function RidingGearPage() {
           {/* Products Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product: any) => (
-              <div key={product.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
+              <div key={product._id || product.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
                 
                 {/* Image Section */}
                 <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10] flex items-center justify-center">
@@ -270,7 +200,7 @@ export default function RidingGearPage() {
                   </button>
 
                   <img 
-                    src={product.image} 
+                    src={product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`} 
                     alt={product.title} 
                     className="w-full h-full object-cover brightness-90 group-hover:scale-102 transition duration-300"
                   />
@@ -306,7 +236,7 @@ export default function RidingGearPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <Link href={`/user/ridinggear/${product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
+                      <Link href={`/user/ridinggear/${product._id || product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
                         Buy Now
                       </Link>
                       <button onClick={handleAddToCart} className="p-2.5 bg-[#181d29] hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl border border-slate-800/80 transition">

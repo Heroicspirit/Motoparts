@@ -1,44 +1,94 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Star, ShoppingCart, ShoppingBag, ArrowLeft, Heart, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import Header from "../../_components/Header";
-
-// Mock data populated from your exact uploaded image specifications
-const PRODUCT_DETAIL = {
-  id: 2,
-  brand: "AKRAPOVIC PERFORMANCE",
-  title: "Slip-On Line Titanium Exhaust System",
-  rating: 4.9,
-  reviewsCount: 128,
-  price: "1,249.00",
-  originalPrice: "1,499.00",
-  discountBadge: "SAVE 15%",
-  specs: [
-    { label: "Material", value: "High-Grade Titanium" },
-    { label: "Weight Reduction", value: "-3.2 kg vs Stock" },
-    { label: "Power Increase", value: "+4.5 HP @ 13,200 RPM" },
-    { label: "Sound Level", value: "102 dB (with baffle)" },
-  ],
-  images: [
-    "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=600&q=80",
-    "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=600&q=80",
-    "https://images.unsplash.com/photo-1614149162883-504ce4d13909?w=600&q=80"
-  ]
-};
-
-const RECOMMENDATIONS = [
-  { id: 10, brand: "CARBON TECH", title: "High-Flow Air Filter", price: "189.00", image: "https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&q=80" },
-  { id: 11, brand: "BREMBO RACING", title: "M50 Monoblock Calipers", price: "849.00", image: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=400&q=80" },
-  { id: 12, brand: "DID RACING", title: "525 ZVM-X Gold Chain", price: "210.00", image: "https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=400&q=80" },
-  { id: 13, brand: "RIZOMA ELITE", title: "Adjustable Rear Sets", price: "540.00", image: "https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?w=400&q=80" }
-];
+import Footer from "../../../(public)/_components/Footer";
+import { getProductById, getProductsByCategory } from "@/lib/api/products";
 
 export default function ProductDetailPage() {
+  const params = useParams();
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [product, setProduct] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (params.id) {
+      fetchProduct(params.id as string);
+    }
+  }, [params.id]);
+
+  const fetchProduct = async (id: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await getProductById(id);
+      if (response.success && response.data) {
+        setProduct(response.data);
+        // Fetch related products from same category
+        fetchRelatedProducts(response.data.category, id);
+      } else {
+        setError('Product not found');
+      }
+    } catch (err) {
+      console.error('Failed to fetch product:', err);
+      setError('Failed to load product');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async (category: string, currentId: string) => {
+    try {
+      const response = await getProductsByCategory(category);
+      if (response.success) {
+        const products = response.data || response.products || [];
+        // Filter out current product and limit to 4
+        const related = products
+          .filter((p: any) => (p._id || p.id) !== currentId)
+          .slice(0, 4);
+        setRelatedProducts(related);
+      }
+    } catch (err) {
+      console.error('Failed to fetch related products:', err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0f1115] flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-slate-400">Loading product...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen bg-[#0f1115] flex flex-col">
+        <Header />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-slate-400 mb-4">{error || 'Product not found'}</div>
+            <Link href="/user/bikeparts" className="text-blue-400 hover:underline">
+              Back to Products
+            </Link>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const images = product.images && product.images.length > 0 ? product.images : [product.image];
+  const specs = product.specs || [];
 
   return (
     <div className="min-h-screen bg-[#0f1115] flex flex-col">
@@ -51,7 +101,7 @@ export default function ProductDetailPage() {
           <Link href="/user/bikeparts" className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition">
             <ArrowLeft size={14} /> Back to Catalog
           </Link>
-          <span className="text-[11px] text-slate-500 font-medium">Product Reference: #MP-00{PRODUCT_DETAIL.id}</span>
+          <span className="text-[11px] text-slate-500 font-medium">Product Reference: #{product._id?.slice(-6) || product.id?.slice(-6)}</span>
         </div>
 
         {/* COMPONENT LAYOUT MATRIX SPLIT GRID */}
@@ -60,9 +110,11 @@ export default function ProductDetailPage() {
           {/* LEFT: IMAGE VIEWPORT GALLERY STACK */}
           <div className="space-y-4">
             <div className="relative rounded-2xl overflow-hidden bg-[#111319] border border-slate-900 aspect-square flex items-center justify-center">
-              <span className="absolute top-4 left-4 z-10 bg-blue-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                Original
-              </span>
+              {product.featured && (
+                <span className="absolute top-4 left-4 z-10 bg-blue-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Featured
+                </span>
+              )}
               <button 
                 onClick={() => setIsFavorite(!isFavorite)}
                 className="absolute top-4 right-4 z-10 p-2 bg-[#0a0c10]/60 backdrop-blur-md rounded-xl text-slate-400 hover:text-rose-500 transition"
@@ -70,15 +122,15 @@ export default function ProductDetailPage() {
                 <Heart size={16} fill={isFavorite ? "currentColor" : "none"} className={isFavorite ? "text-rose-500" : ""} />
               </button>
               <img 
-                src={PRODUCT_DETAIL.images[activeImgIdx]} 
-                alt={PRODUCT_DETAIL.title}
+                src={images[activeImgIdx]?.startsWith('http') ? images[activeImgIdx] : `http://localhost:5001${images[activeImgIdx]}`}
+                alt={product.title}
                 className="w-full h-full object-cover brightness-95"
               />
             </div>
 
             {/* Gallery Mini Previews Row */}
             <div className="grid grid-cols-3 gap-4">
-              {PRODUCT_DETAIL.images.map((img, idx) => (
+              {images.map((img: string, idx: number) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImgIdx(idx)}
@@ -86,7 +138,7 @@ export default function ProductDetailPage() {
                     activeImgIdx === idx ? "border-blue-500 ring-1 ring-blue-500" : "border-slate-900 hover:border-slate-800"
                   }`}
                 >
-                  <img src={img} alt="Thumbnail preview" className="w-full h-full object-cover brightness-75" />
+                  <img src={img?.startsWith('http') ? img : `http://localhost:5001${img}`} alt="Thumbnail preview" className="w-full h-full object-cover brightness-75" />
                 </button>
               ))}
             </div>
@@ -96,21 +148,21 @@ export default function ProductDetailPage() {
           <div className="space-y-6">
             <div className="space-y-2">
               <span className="text-xs font-bold text-slate-500 tracking-wider uppercase">
-                {PRODUCT_DETAIL.brand}
+                {product.brand}
               </span>
               <h1 className="text-3xl font-extrabold text-white tracking-tight leading-tight">
-                {PRODUCT_DETAIL.title}
+                {product.title}
               </h1>
               
               {/* Reviews & Star Rating Row */}
               <div className="flex items-center gap-2 pt-1">
                 <div className="flex items-center text-blue-500">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} fill="currentColor" className="stroke-none" />
+                    <Star key={i} size={14} fill={i < Math.floor(product.rating || 0) ? "currentColor" : "none"} className="stroke-none" />
                   ))}
                 </div>
                 <span className="text-xs text-slate-400 font-medium">
-                  ({PRODUCT_DETAIL.reviewsCount} Reviews)
+                  ({product.reviewsCount || 0} Reviews)
                 </span>
               </div>
             </div>
@@ -118,30 +170,59 @@ export default function ProductDetailPage() {
             {/* Pricing Section Details */}
             <div className="flex items-baseline gap-3 pt-2">
               <span className="text-2xl font-black text-white">
-                Rs {PRODUCT_DETAIL.price}
+                Rs {product.price}
               </span>
-              <span className="text-sm text-slate-600 line-through">
-                Rs {PRODUCT_DETAIL.originalPrice}
-              </span>
-              <span className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black px-2 py-0.5 rounded">
-                {PRODUCT_DETAIL.discountBadge}
+              {product.originalPrice && (
+                <span className="text-sm text-slate-600 line-through">
+                  Rs {product.originalPrice}
+                </span>
+              )}
+              {product.discountBadge && (
+                <span className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black px-2 py-0.5 rounded">
+                  {product.discountBadge}
+                </span>
+              )}
+            </div>
+
+            {/* Stock Status */}
+            <div className="flex items-center gap-2">
+              <span className={`text-xs font-bold px-2 py-1 rounded ${
+                product.stock > 0 
+                  ? "bg-green-500/10 text-green-400 border border-green-500/20" 
+                  : "bg-red-500/10 text-red-400 border border-red-500/20"
+              }`}>
+                {product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
               </span>
             </div>
 
             {/* TECHNICAL SPECIFICATIONS TABLE COMPONENT */}
-            <div className="space-y-3 pt-4 border-t border-slate-900">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                Technical Specifications
-              </h3>
-              <div className="bg-[#111319]/50 rounded-xl border border-slate-900 overflow-hidden divide-y divide-slate-900/60 text-xs">
-                {PRODUCT_DETAIL.specs.map((spec, idx) => (
-                  <div key={idx} className="flex justify-between p-3.5 px-4 items-center">
-                    <span className="text-slate-400 font-medium">{spec.label}</span>
-                    <span className="text-slate-200 font-semibold text-right">{spec.value}</span>
-                  </div>
-                ))}
+            {specs.length > 0 && (
+              <div className="space-y-3 pt-4 border-t border-slate-900">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Technical Specifications
+                </h3>
+                <div className="bg-[#111319]/50 rounded-xl border border-slate-900 overflow-hidden divide-y divide-slate-900/60 text-xs">
+                  {specs.map((spec: any, idx: number) => (
+                    <div key={idx} className="flex justify-between p-3.5 px-4 items-center">
+                      <span className="text-slate-400 font-medium">{spec.label}</span>
+                      <span className="text-slate-200 font-semibold text-right">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Description */}
+            {product.description && (
+              <div className="space-y-2 pt-4 border-t border-slate-900">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Description
+                </h3>
+                <p className="text-sm text-slate-300 leading-relaxed">
+                  {product.description}
+                </p>
+              </div>
+            )}
 
             {/* PURCHASE & ACTIONS COUNTER HUD */}
             <div className="flex items-center gap-3 pt-6">
@@ -179,40 +260,47 @@ export default function ProductDetailPage() {
         </div>
 
         {/* RECOMMENDATION BLOCK (YOU MAY ALSO LIKE) */}
-        <section className="space-y-6 pt-12 border-t border-slate-900">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white tracking-tight">You may also like</h2>
-            <Link href="/user/bikeparts" className="text-xs font-semibold text-blue-400 hover:underline flex items-center gap-1 transition">
-              View all components <ArrowRight size={12} />
-            </Link>
-          </div>
+        {relatedProducts.length > 0 && (
+          <section className="space-y-6 pt-12 border-t border-slate-900">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-white tracking-tight">You may also like</h2>
+              <Link href="/user/bikeparts" className="text-xs font-semibold text-blue-400 hover:underline flex items-center gap-1 transition">
+                View all components <ArrowRight size={12} />
+              </Link>
+            </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {RECOMMENDATIONS.map((item) => (
-              <div key={item.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition">
-                <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10]">
-                  <img src={item.image} alt={item.title} className="w-full h-full object-cover brightness-90 group-hover:scale-102 transition duration-300" />
-                </div>
-                
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">{item.brand}</span>
-                    <h4 className="text-xs font-semibold text-slate-200 line-clamp-1 pt-0.5 group-hover:text-white transition">{item.title}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((item: any) => (
+                <div key={item._id || item.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition">
+                  <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10]">
+                    <img 
+                      src={item.image?.startsWith('http') ? item.image : `http://localhost:5001${item.image}`} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover brightness-90 group-hover:scale-102 transition duration-300" 
+                    />
                   </div>
                   
-                  <div className="flex items-center justify-between pt-1">
-                    <span className="text-xs font-bold text-white">Rs {item.price}</span>
-                    <button className="p-2.5 bg-[#181d29] hover:bg-blue-500 text-slate-400 hover:text-white rounded-xl border border-slate-800/80 transition">
-                      <ShoppingCart size={13} />
-                    </button>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">{item.brand}</span>
+                      <h4 className="text-xs font-semibold text-slate-200 line-clamp-1 pt-0.5 group-hover:text-white transition">{item.title}</h4>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-xs font-bold text-white">Rs {item.price}</span>
+                      <button className="p-2.5 bg-[#181d29] hover:bg-blue-500 text-slate-400 hover:text-white rounded-xl border border-slate-800/80 transition">
+                        <ShoppingCart size={13} />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </section>
+              ))}
+            </div>
+          </section>
+        )}
 
       </div>
+      <Footer />
       </main>
     </div>
   );
