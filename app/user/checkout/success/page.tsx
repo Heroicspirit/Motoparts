@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { 
   Search, 
   ShoppingCart, 
@@ -13,8 +13,41 @@ import {
   ArrowLeft 
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function OrderSuccessPage() {
+  const router = useRouter();
+  const [orderData, setOrderData] = useState<any>(null);
+  const hasLoaded = useRef(false);
+
+  useEffect(() => {
+    if (hasLoaded.current) return;
+    hasLoaded.current = true;
+
+    const pendingOrder = sessionStorage.getItem('pendingOrder');
+    if (!pendingOrder) {
+      router.push('/user/cart');
+      return;
+    }
+    setOrderData(JSON.parse(pendingOrder));
+    sessionStorage.removeItem('pendingOrder');
+  }, [router]);
+
+  if (!orderData) {
+    return <div className="min-h-screen bg-[#0a0c10] flex items-center justify-center text-white">Loading...</div>;
+  }
+
+  const { orderNumber, items, shippingAddress, total, createdAt, paymentMethod } = orderData;
+  const orderDate = createdAt ? new Date(createdAt).toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  }) : new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
   return (
     <div className="min-h-screen bg-[#0a0c10] text-slate-200 antialiased font-sans flex flex-col justify-between">
       
@@ -54,10 +87,10 @@ export default function OrderSuccessPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h8a1 1 0 001-1z" />
                 </svg>
               </button>
-              <Link href="/cart" className="hover:text-white transition relative">
+              <Link href="/user/cart" className="hover:text-white transition relative">
                 <ShoppingCart size={18} />
               </Link>
-              <Link href="/profile" className="hover:text-white transition">
+              <Link href="/user/dashboard" className="hover:text-white transition">
                 <User size={18} />
               </Link>
             </div>
@@ -90,9 +123,9 @@ export default function OrderSuccessPage() {
             <div className="bg-[#11141e] border border-slate-850 rounded-xl p-5 flex items-center justify-between">
               <div className="space-y-1">
                 <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest block">Order Identifier</span>
-                <h3 className="text-base font-bold text-slate-100 tracking-wide">#MP-87291</h3>
+                <h3 className="text-base font-bold text-slate-100 tracking-wide">#{orderNumber || 'MP-' + Math.random().toString(36).substr(2, 9).toUpperCase()}</h3>
                 <span className="text-[11px] text-slate-400 flex items-center gap-1 pt-0.5">
-                  <Calendar size={12} className="text-slate-500" /> Order Date: May 10, 2024
+                  <Calendar size={12} className="text-slate-500" /> Order Date: {orderDate}
                 </span>
               </div>
               {/* Dynamic Status Pill Badge */}
@@ -106,20 +139,22 @@ export default function OrderSuccessPage() {
             <div className="bg-[#11141e] border border-slate-850 rounded-xl p-6 space-y-5">
               <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Purchased Items</h2>
 
-              <div className="bg-[#0b0d14] rounded-lg p-3 flex gap-4 items-center border border-slate-900">
-                <div className="w-16 h-16 rounded overflow-hidden bg-[#131622] shrink-0 border border-slate-800">
-                  <img 
-                    src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=150&q=80" 
-                    alt="Akrapovič Slip-On Exhaust" 
-                    className="w-full h-full object-cover brightness-90"
-                  />
+              {items.map((item: any, index: number) => (
+                <div key={index} className="bg-[#0b0d14] rounded-lg p-3 flex gap-4 items-center border border-slate-900">
+                  <div className="w-16 h-16 rounded overflow-hidden bg-[#131622] shrink-0 border border-slate-800">
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover brightness-90"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1">
+                    <h4 className="text-xs font-semibold text-slate-200 truncate">{item.title}</h4>
+                    <p className="text-[10px] text-slate-500 font-medium truncate">Qty: {item.quantity}</p>
+                    <div className="text-xs font-bold text-white pt-0.5">Rs {(item.price * item.quantity).toFixed(2)}</div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0 space-y-1">
-                  <h4 className="text-xs font-semibold text-slate-200 truncate">Akrapovič Slip-On Exhaust</h4>
-                  <p className="text-[10px] text-slate-500 font-medium truncate">Performance Line (Titanium) • SKU: AK-992-S</p>
-                  <div className="text-xs font-bold text-white pt-0.5">Rs. 1,200</div>
-                </div>
-              </div>
+              ))}
             </div>
 
             {/* ESTIMATED DELIVERY BLOCK METRIC */}
@@ -129,7 +164,7 @@ export default function OrderSuccessPage() {
               </div>
               <div className="space-y-1">
                 <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest block">Estimated Delivery</span>
-                <h3 className="text-sm font-bold text-white">May 15 - May 20, 2024</h3>
+                <h3 className="text-sm font-bold text-white">3-5 Business Days</h3>
                 <p className="text-xs text-slate-400">Standard Technical Logistics</p>
               </div>
             </div>
@@ -147,16 +182,16 @@ export default function OrderSuccessPage() {
               
               {/* Formatted Address Information Text */}
               <div className="text-xs text-slate-300 space-y-1 leading-relaxed pl-1">
-                <div className="font-bold text-white text-xs pb-0.5">Shyam</div>
-                <div>1234 Park St.</div>
-                <div>Los Angeles, CA 90210</div>
-                <div>United States</div>
+                <div className="font-bold text-white text-xs pb-0.5">{shippingAddress.firstName} {shippingAddress.lastName}</div>
+                <div>{shippingAddress.address}</div>
+                <div>{shippingAddress.city}</div>
+                <div>{shippingAddress.phone}</div>
               </div>
 
-              {/* Modify Address Action Trigger Button */}
-              <button className="w-full border border-slate-800 bg-[#161a27] hover:bg-[#1d2233] text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-1.5 group">
-                <Pencil size={11} className="text-slate-500 group-hover:scale-105 transition" /> Modify Address
-              </button>
+              {/* Payment Method */}
+              <div className="text-xs text-slate-400 pt-2">
+                <span className="font-bold text-white">Payment Method:</span> {paymentMethod === 'cod' ? 'Cash on Delivery' : paymentMethod === 'wallet' ? 'Khalti / IME Pay' : paymentMethod}
+              </div>
             </div>
 
             {/* ORDER TOTAL SUMMARY DETAIL PANEL */}
@@ -167,7 +202,7 @@ export default function OrderSuccessPage() {
               <div className="space-y-4 text-xs border-b border-slate-900 pb-5">
                 <div className="flex justify-between items-center text-slate-400">
                   <span>Subtotal</span>
-                  <span className="text-white font-medium">Rs. 1,249</span>
+                  <span className="text-white font-medium">Rs {total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-400">
                   <span>Shipping Cost</span>
@@ -182,7 +217,7 @@ export default function OrderSuccessPage() {
               {/* Total Final Paid Block Display */}
               <div className="flex justify-between items-baseline pt-1">
                 <span className="text-xs font-medium text-slate-400">Total Amount Paid</span>
-                <span className="text-xl font-black text-blue-400">Rs1,249.99</span>
+                <span className="text-xl font-black text-blue-400">Rs {total.toFixed(2)}</span>
               </div>
             </div>
 
@@ -192,8 +227,8 @@ export default function OrderSuccessPage() {
 
         {/* BOTTOM REDIRECT ACTION LINK */}
         <div className="flex justify-center pt-4">
-          <Link href="/user/bikeparts" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition group">
-            <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition" /> Back to Workspace
+          <Link href="/user/dashboard" className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition group">
+            <ArrowLeft size={13} className="group-hover:-translate-x-0.5 transition" /> Back to Dashboard
           </Link>
         </div>
 

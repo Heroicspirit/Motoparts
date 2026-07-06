@@ -1,15 +1,15 @@
 "use client";
 
 import React, { useState } from "react";
-import { Lock, Truck, ShoppingBag, ArrowRight, ShieldCheck, RefreshCcw } from "lucide-react";
+import { Lock, Truck, ShoppingBag, ArrowRight, ShieldCheck, RefreshCcw, ShoppingCart, Trash2 } from "lucide-react";
 import Header from "../_components/Header";
 import Link from "next/link";
-import { createOrder } from "@/lib/api/orders";
+import { useCart } from "@/context/CartContext";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const { cartItems, cartTotal, removeFromCart } = useCart();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,38 +18,37 @@ export default function CheckoutPage() {
     address: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    try {
-      // Mock order data - in real app, this would come from cart
-      const orderData = {
-        items: [
-          {
-            product: "mock-product-id",
-            title: "Akrapovič Slip-On Exhaust",
-            image: "https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=500&q=80",
-            price: 1249.99,
-            quantity: 1
-          }
-        ],
-        shippingAddress: formData,
-        paymentMethod: 'cod',
-        subtotal: 1249.99,
-        shippingCost: 0,
-        total: 1249.99
-      };
-
-      const response = await createOrder(orderData);
-      if (response.success) {
-        router.push('/user/checkout/review');
-      }
-    } catch (error) {
-      console.error('Failed to create order:', error);
-    } finally {
-      setLoading(false);
+    if (cartItems.length === 0) {
+      alert("Your cart is empty. Please add items before checkout.");
+      return;
     }
+
+    const { firstName, lastName, phone, city, address } = formData;
+    if (!firstName.trim() || !lastName.trim() || !phone.trim() || !city.trim() || !address.trim()) {
+      alert("Please fill in all shipping details before continuing.");
+      return;
+    }
+
+    // No backend call yet — order is only created once payment method is confirmed.
+    const pendingOrder = {
+      items: cartItems.map(item => ({
+        product: item.product,
+        title: item.title,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity
+      })),
+      shippingAddress: formData,
+      subtotal: cartTotal,
+      shippingCost: 0,
+      total: cartTotal
+    };
+
+    sessionStorage.setItem('pendingOrder', JSON.stringify(pendingOrder));
+    router.push('/user/checkout/review');
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -65,18 +64,31 @@ export default function CheckoutPage() {
 
       {/* MAIN CHECKOUT GRID */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-8 pb-12">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          
-          {/* LEFT COLUMN (Shipping & Review Items) */}
-          <div className="lg:col-span-8 space-y-6">
+        {cartItems.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <ShoppingCart className="w-16 h-16 text-slate-600 mb-4" />
+            <h2 className="text-xl font-semibold text-white mb-2">Your cart is empty</h2>
+            <p className="text-slate-400 mb-6">Add some products to your cart to continue checkout</p>
+            <button
+              onClick={() => router.push('/user/bikeparts')}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-full transition"
+            >
+              Continue Shopping
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             
-            {/* Shipping Information Section */}
-            <div className="bg-[#151923] border border-slate-800 rounded-xl p-6 lg:p-8 space-y-6">
-              <h2 className="text-lg font-semibold text-white flex items-center gap-3">
-                <Truck size={20} className="text-slate-300" /> Shipping Information
-              </h2>
+            {/* LEFT COLUMN (Shipping & Review Items) */}
+            <div className="lg:col-span-8 space-y-6">
               
-              <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Shipping Information Section */}
+              <div className="bg-[#151923] border border-slate-800 rounded-xl p-6 lg:p-8 space-y-6">
+                <h2 className="text-lg font-semibold text-white flex items-center gap-3">
+                  <Truck size={20} className="text-slate-300" /> Shipping Information
+                </h2>
+                
+                <form id="checkout-form" onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   {/* First Name */}
                   <div className="space-y-1.5">
@@ -148,27 +160,33 @@ export default function CheckoutPage() {
                 <ShoppingBag size={20} className="text-slate-300" /> Review Items
               </h2>
 
-              <div className="bg-[#1b202c] rounded-xl p-4 flex flex-col sm:flex-row gap-5 items-center sm:items-start border border-slate-800/60">
-                <div className="w-32 h-32 shrink-0 rounded-lg overflow-hidden bg-[#0a0c10]">
-                  <img 
-                    src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=300&q=80" 
-                    alt="Akrapovič Slip-On Line Titanium Exhaust" 
-                    className="w-full h-full object-cover brightness-95"
-                  />
-                </div>
-                <div className="flex-1 space-y-2">
-                  <h3 className="text-sm font-semibold text-white">Akrapovič Slip-On Line Titanium Exhaust</h3>
-                  <p className="text-xs text-slate-400 leading-relaxed">
-                    Carbon fiber end cap | Precision titanium welds | High-performance weight reduction
-                  </p>
-                  <div className="flex items-center justify-between pt-4">
-                    <span className="inline-flex items-center justify-center px-3 py-1 bg-slate-800/80 rounded-full text-xs font-medium text-slate-300 border border-slate-700/50">
-                      Qty: 1
-                    </span>
-                    <span className="text-sm font-bold text-white">Rs1,249.00</span>
+              {cartItems.map((item) => (
+                <div key={item.product} className="bg-[#1b202c] rounded-xl p-4 flex flex-col sm:flex-row gap-5 items-center sm:items-start border border-slate-800/60">
+                  <div className="w-32 h-32 shrink-0 rounded-lg overflow-hidden bg-[#0a0c10]">
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover brightness-95"
+                    />
+                  </div>
+                  <div className="flex-1 space-y-3">
+                    <h3 className="text-sm font-semibold text-white">{item.title}</h3>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <span className="inline-flex items-center justify-center px-3 py-1 bg-slate-800/80 rounded-full text-xs font-medium text-slate-300 border border-slate-700/50">
+                        Qty: {item.quantity}
+                      </span>
+                      <span className="text-sm font-bold text-white">Rs {(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeFromCart(item.product)}
+                      className="inline-flex items-center gap-2 text-[11px] font-semibold text-rose-400 hover:text-rose-300 transition"
+                    >
+                      <Trash2 size={14} /> Remove item
+                    </button>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
 
           </div>
@@ -178,29 +196,36 @@ export default function CheckoutPage() {
             <div className="bg-[#151923] border border-slate-800 rounded-xl p-6 lg:p-8 space-y-6 sticky top-8">
               <h2 className="text-lg font-semibold text-white">Order Summary</h2>
 
-              {/* Mini Cart Item */}
-              <div className="flex items-center gap-4 pb-6 border-b border-slate-800">
-                <div className="w-16 h-12 rounded bg-[#0a0c10] overflow-hidden shrink-0">
-                  <img 
-                    src="https://images.unsplash.com/photo-1609630875171-b1321377ee65?w=150&q=80" 
-                    alt="Item Thumbnail" 
-                    className="w-full h-full object-cover brightness-90"
-                  />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-xs font-medium text-slate-200 truncate">Akrapovič Slip-On Line<br/>Titanium Exhaust</h4>
-                  <div className="flex justify-between items-center pt-1 text-xs">
-                    <span className="text-slate-400">Qty: 1</span>
-                    <span className="text-slate-400">Rs 1,249.00</span>
+              {/* Mini Cart Items */}
+              {cartItems.slice(0, 2).map((item) => (
+                <div key={item.product} className="flex items-center gap-4 pb-4 border-b border-slate-800 last:border-0">
+                  <div className="w-16 h-12 rounded bg-[#0a0c10] overflow-hidden shrink-0">
+                    <img 
+                      src={item.image} 
+                      alt={item.title} 
+                      className="w-full h-full object-cover brightness-90"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs font-medium text-slate-200 truncate">{item.title}</h4>
+                    <div className="flex justify-between items-center pt-1 text-xs">
+                      <span className="text-slate-400">Qty: {item.quantity}</span>
+                      <span className="text-slate-400">Rs {(item.price * item.quantity).toFixed(2)}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
+              {cartItems.length > 2 && (
+                <div className="text-xs text-slate-400 pb-4 border-b border-slate-800">
+                  +{cartItems.length - 2} more items
+                </div>
+              )}
 
               {/* Totals Breakdown */}
               <div className="space-y-3 text-sm border-b border-slate-800 pb-6">
                 <div className="flex justify-between text-slate-300">
                   <span>Items Total</span>
-                  <span className="text-white">Rs 1,249.00</span>
+                  <span className="text-white">Rs {cartTotal.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between text-slate-300">
                   <span>Shipping</span>
@@ -211,16 +236,16 @@ export default function CheckoutPage() {
               {/* Grand Total */}
               <div className="flex items-baseline justify-between pt-2">
                 <span className="text-xl font-bold text-white">Total</span>
-                <span className="text-xl font-bold text-white">Rs 1,249.00</span>
+                <span className="text-xl font-bold text-white">Rs {cartTotal.toFixed(2)}</span>
               </div>
 
               {/* Action Button */}
               <button 
                 type="submit"
-                disabled={loading}
-                className="w-full bg-[#b3c5ff] hover:bg-[#a5b8ff] text-slate-900 font-bold text-sm py-3.5 px-4 rounded-md transition flex items-center justify-center gap-2 mt-4 text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                form="checkout-form"
+                className="w-full bg-[#b3c5ff] hover:bg-[#a5b8ff] text-slate-900 font-bold text-sm py-3.5 px-4 rounded-md transition flex items-center justify-center gap-2 mt-4 text-center"
               >
-                {loading ? 'Processing...' : 'PROCEED TO PAY'} <ArrowRight size={16} />
+                CONTINUE TO REVIEW <ArrowRight size={16} />
               </button>
 
               {/* Trust Badges */}
@@ -238,6 +263,7 @@ export default function CheckoutPage() {
           </div>
 
         </div>
+        )}
       </main>
 
     </div>

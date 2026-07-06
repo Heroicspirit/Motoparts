@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Search, ShoppingCart, User } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 const NAV_LINKS = [
     { href: "/user/dashboard", label: "Home" },
@@ -15,6 +16,7 @@ const NAV_LINKS = [
 export default function Header() {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
+    const { cartCount } = useCart();
 
     const isActive = (href: string) => pathname?.startsWith(href);
 
@@ -52,7 +54,11 @@ export default function Header() {
                 {/* Shopping Cart */}
                 <Link href="/user/cart" className="relative p-2 text-slate-400 hover:text-white transition mr-1">
                   <ShoppingCart className="w-5 h-5" />
-                  <span className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">1</span>
+                  {cartCount > 0 && (
+                    <span className="absolute top-1 right-1 bg-blue-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold">
+                      {cartCount > 9 ? "9+" : cartCount}
+                    </span>
+                  )}
                 </Link>
 
                 {/* User Button */}

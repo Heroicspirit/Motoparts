@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { 
   MapPin, 
   Phone, 
@@ -12,12 +12,48 @@ import {
   Pencil,
   Wallet,
   Building,
-  CreditCard
+  CreditCard,
+  Trash2
 } from "lucide-react";
 import Link from "next/link";
 import Header from "../../_components/Header";
+import { useRouter } from "next/navigation";
 
 export default function OrderReviewPage() {
+  const router = useRouter();
+  const [orderData, setOrderData] = useState<any>(null);
+
+  useEffect(() => {
+    const pendingOrder = sessionStorage.getItem('pendingOrder');
+    if (!pendingOrder) {
+      router.push('/user/cart');
+      return;
+    }
+    setOrderData(JSON.parse(pendingOrder));
+  }, [router]);
+
+  const handleRemoveItem = (productId: string) => {
+    if (!orderData) return;
+
+    const updatedItems = orderData.items.filter((item: any) => item.product !== productId);
+    const updatedTotal = updatedItems.reduce((sum: number, item: any) => sum + item.price * item.quantity, 0);
+    const updatedOrder = { ...orderData, items: updatedItems, total: updatedTotal };
+
+    const pendingOrder = JSON.stringify(updatedOrder);
+    sessionStorage.setItem('pendingOrder', pendingOrder);
+    setOrderData(updatedOrder);
+
+    if (updatedItems.length === 0) {
+      router.push('/user/cart');
+    }
+  };
+
+  if (!orderData) {
+    return <div className="min-h-screen bg-[#0f1115] flex items-center justify-center text-white">Loading...</div>;
+  }
+
+  const { shippingAddress, items, total, orderNumber } = orderData;
+
   return (
     <div className="min-h-screen bg-[#0f1115] flex flex-col">
       <Header />
@@ -49,7 +85,7 @@ export default function OrderReviewPage() {
                   <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                     <UserCheck size={11} /> Receiver
                   </div>
-                  <div className="text-xs font-semibold text-white">Shyam</div>
+                  <div className="text-xs font-semibold text-white">{shippingAddress.firstName} {shippingAddress.lastName}</div>
                 </div>
 
                 {/* Contact Number */}
@@ -57,7 +93,7 @@ export default function OrderReviewPage() {
                   <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
                     <Phone size={11} /> Contact Number
                   </div>
-                  <div className="text-xs font-semibold text-white">+977 9820824223</div>
+                  <div className="text-xs font-semibold text-white">{shippingAddress.phone}</div>
                 </div>
 
                 {/* Address Details */}
@@ -67,26 +103,45 @@ export default function OrderReviewPage() {
                   </div>
                   <div className="text-xs text-slate-300 font-medium flex items-center gap-1">
                     <span className="inline-block w-1.5 h-1.5 bg-blue-500 rounded-full mr-1"></span>
-                    Nepal, Ktm, Putalisadak, Ktm-29
+                    {shippingAddress.city}, {shippingAddress.address}
                   </div>
                 </div>
               </div>
 
               {/* Edit Address Action Trigger */}
               <div className="pt-2">
-                <button className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold transition group">
+                <button onClick={() => router.push('/user/checkout')} className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold transition group">
                   Edit Address <Pencil size={11} className="group-hover:scale-105 transition" />
                 </button>
               </div>
             </div>
 
-            {/* Package Details Box Placeholder */}
+            {/* Package Details Box */}
             <div className="bg-[#131622] border border-slate-800/60 rounded-xl p-6">
               <h2 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2 pb-3 border-b border-slate-800/50">
                 <Package size={14} className="text-slate-400" /> Package Details
               </h2>
-              <div className="h-12 flex items-center text-xs text-slate-500 italic pl-1 pt-4">
-                1 item bundle packaged via express courier router line.
+              <div className="space-y-3">
+                {items.map((item: any, index: number) => (
+                  <div key={index} className="flex items-center gap-4 p-3 bg-[#0a0c10] rounded-lg">
+                    <div className="w-16 h-16 rounded overflow-hidden shrink-0">
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-semibold text-white truncate">{item.title}</div>
+                      <div className="text-[10px] text-slate-400 mt-1">Qty: {item.quantity}</div>
+                    </div>
+                    <div className="flex flex-col items-end gap-2">
+                      <span className="text-xs font-bold text-white">Rs {(item.price * item.quantity).toFixed(2)}</span>
+                      <button
+                        onClick={() => handleRemoveItem(item.product)}
+                        className="inline-flex items-center gap-1 text-[10px] text-rose-400 hover:text-rose-300 transition"
+                      >
+                        <Trash2 size={12} /> Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -102,8 +157,8 @@ export default function OrderReviewPage() {
               {/* Price Rows */}
               <div className="space-y-4 text-xs border-b border-slate-800/50 pb-5">
                 <div className="flex justify-between items-center">
-                  <span className="text-slate-400">Items Total (1 Item)</span>
-                  <span className="text-white font-bold">Rs. 1,249</span>
+                  <span className="text-slate-400">Items Total ({items.length} {items.length === 1 ? 'Item' : 'Items'})</span>
+                  <span className="text-white font-bold">Rs. {total.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-slate-400">Shipping</span>
@@ -117,7 +172,7 @@ export default function OrderReviewPage() {
                   <span className="text-xs font-bold text-white block">Total</span>
                   <span className="text-[9px] text-slate-500 tracking-wider font-bold uppercase block">Including Taxes</span>
                 </div>
-                <span className="text-base font-black text-blue-400">Rs. 1249</span>
+                <span className="text-base font-black text-blue-400">Rs. {total.toFixed(2)}</span>
               </div>
 
               {/* Submission CTA Action Route Trigger Button */}

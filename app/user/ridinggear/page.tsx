@@ -13,12 +13,16 @@ import {
 } from "lucide-react";
 import Header from "../_components/Header";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 import { getProductsByCategory } from "@/lib/api/products";
 
 export default function RidingGearPage() {
+  const router = useRouter();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const [favorites, setFavorites] = useState<(string | number)[]>([]);
   const [showToast, setShowToast] = useState(false);
   const [selectedBrand, setSelectedBrand] = useState<string>("Alpinestars");
 
@@ -41,16 +45,41 @@ export default function RidingGearPage() {
     }
   };
 
-  const toggleFavorite = (id: number) => {
+  const toggleFavorite = (id: string | number) => {
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (product: any) => {
+    addToCart({
+      product: product._id || product.id,
+      title: product.title,
+      image: product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`,
+      price: parseFloat(product.price),
+      quantity: 1
+    });
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
+
+  const handleBuyNow = (product: any) => {
+    addToCart({
+      product: product._id || product.id,
+      title: product.title,
+      image: product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`,
+      price: parseFloat(product.price),
+      quantity: 1
+    });
+    router.push('/checkout');
+  };
+
+  // Filter products by selected brand (case-insensitive, tolerant of missing brand field)
+  const filteredProducts = products.filter((product: any) => {
+    if (!selectedBrand) return true;
+    if (!product.brand) return false;
+    return product.brand.toLowerCase() === selectedBrand.toLowerCase();
+  });
 
   return (
     <div className="min-h-screen bg-[#0f1115] flex flex-col">
@@ -95,7 +124,7 @@ export default function RidingGearPage() {
                   <input 
                     type="checkbox"
                     checked={selectedBrand === brand}
-                    onChange={() => setSelectedBrand(brand)}
+                    onChange={() => setSelectedBrand(prev => prev === brand ? "" : brand)}
                     className="w-4 h-4 rounded border-slate-800 bg-[#111319] text-blue-500 focus:ring-0 accent-blue-500" 
                   />
                   <span>{brand}</span>
@@ -157,7 +186,9 @@ export default function RidingGearPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-900">
             <div>
               <h1 className="text-2xl font-bold text-white tracking-tight">Riding Gear</h1>
-              <p className="text-xs text-slate-500 pt-0.5">Showing 1-12 of 156 results</p>
+              <p className="text-xs text-slate-500 pt-0.5">
+                Showing {filteredProducts.length} of {products.length} results
+              </p>
             </div>
 
             {/* Sorting Options */}
@@ -170,85 +201,112 @@ export default function RidingGearPage() {
             </div>
           </div>
 
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center text-slate-500 text-sm py-12">
+              Loading products...
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && filteredProducts.length === 0 && (
+            <div className="text-center text-slate-500 text-sm py-12">
+              No products found for the selected filters.
+            </div>
+          )}
+
           {/* Products Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product: any) => (
-              <div key={product._id || product.id} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
-                
-                {/* Image Section */}
-                <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10] flex items-center justify-center">
-                  {product.tag && (
-                    <span className="absolute top-3 left-3 z-10 bg-blue-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
-                      {product.tag}
-                    </span>
-                  )}
-                  {product.discount && (
-                    <span className="absolute top-3 left-3 z-10 bg-blue-500/20 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-md">
-                      {product.discount}
-                    </span>
-                  )}
-                  
-                  {/* Heart Wishlist */}
-                  <button 
-                    onClick={() => toggleFavorite(product.id)}
-                    className="absolute top-3 right-3 z-10 p-1.5 bg-[#0a0c10]/40 backdrop-blur-sm rounded-full text-slate-400 hover:text-rose-500 hover:scale-105 transition"
-                  >
-                    <Heart 
-                      className={`w-4 h-4 ${favorites.includes(product.id) ? "text-rose-500" : ""}`}
-                      fill={favorites.includes(product.id) ? "currentColor" : "none"}
-                    />
-                  </button>
+          {!loading && filteredProducts.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredProducts.map((product: any) => {
+                const productId = product._id || product.id;
+                const isFavorite = favorites.includes(productId);
 
-                  <img 
-                    src={product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`} 
-                    alt={product.title} 
-                    className="w-full h-full object-cover brightness-90 group-hover:scale-102 transition duration-300"
-                  />
-                </div>
-
-                {/* Information */}
-                <div className="space-y-3 flex-1 flex flex-col justify-between">
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">
-                      {product.brand}
-                    </span>
-                    <h4 className="text-sm font-semibold text-slate-200 line-clamp-2 leading-snug group-hover:text-white transition">
-                      {product.title}
-                    </h4>
-                    {product.inStock && (
-                      <span className="inline-block bg-slate-800/60 text-slate-400 text-[10px] font-medium px-2 py-0.5 rounded mt-1">
-                        In Stock
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Pricing */}
-                  <div className="space-y-3 pt-1">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-bold text-white">
-                        Rs {product.price}
-                      </span>
-                      {product.originalPrice && (
-                        <span className="text-xs text-slate-600 line-through">
-                          Rs {product.originalPrice}
+                return (
+                  <div key={productId} className="group bg-[#111319] border border-slate-900 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-slate-800 transition duration-150">
+                    
+                    {/* Image Section */}
+                    <div className="relative rounded-xl overflow-hidden aspect-square bg-[#0a0c10] flex items-center justify-center">
+                      {product.tag && (
+                        <span className="absolute top-3 left-3 z-10 bg-blue-500 text-white text-[9px] font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                          {product.tag}
                         </span>
                       )}
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <Link href={`/user/ridinggear/${product._id || product.id}`} className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center">
-                        Buy Now
-                      </Link>
-                      <button onClick={handleAddToCart} className="p-2.5 bg-[#181d29] hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl border border-slate-800/80 transition">
-                        <ShoppingCart className="w-4 h-4" />
+                      {product.discount && (
+                        <span className="absolute top-3 left-3 z-10 bg-blue-500/20 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-md">
+                          {product.discount}
+                        </span>
+                      )}
+                      
+                      {/* Heart Wishlist */}
+                      <button 
+                        onClick={() => toggleFavorite(productId)}
+                        className="absolute top-3 right-3 z-10 p-1.5 bg-[#0a0c10]/40 backdrop-blur-sm rounded-full text-slate-400 hover:text-rose-500 hover:scale-105 transition"
+                      >
+                        <Heart 
+                          className={`w-4 h-4 ${isFavorite ? "text-rose-500" : ""}`}
+                          fill={isFavorite ? "currentColor" : "none"}
+                        />
                       </button>
-                    </div>
-                  </div>
-                </div>
 
-              </div>
-            ))}
-          </div>
+                      <img 
+                        src={product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`} 
+                        alt={product.title} 
+                        className="w-full h-full object-cover brightness-90 group-hover:scale-102 transition duration-300"
+                      />
+                    </div>
+
+                    {/* Information */}
+                    <div className="space-y-3 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-slate-500 tracking-wider uppercase">
+                          {product.brand}
+                        </span>
+                        <h4 className="text-sm font-semibold text-slate-200 line-clamp-2 leading-snug group-hover:text-white transition">
+                          {product.title}
+                        </h4>
+                        {product.inStock && (
+                          <span className="inline-block bg-slate-800/60 text-slate-400 text-[10px] font-medium px-2 py-0.5 rounded mt-1">
+                            In Stock
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Pricing */}
+                      <div className="space-y-3 pt-1">
+                        <div className="flex items-baseline gap-2">
+                          <span className="text-sm font-bold text-white">
+                            Rs {product.price}
+                          </span>
+                          {product.originalPrice && (
+                            <span className="text-xs text-slate-600 line-through">
+                              Rs {product.originalPrice}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button 
+                            onClick={() => handleBuyNow(product)} 
+                            className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold text-xs py-2.5 px-4 rounded-xl transition shadow-sm shadow-blue-500/5 text-center"
+                          >
+                            Buy Now
+                          </button>
+                          <button 
+                            onClick={() => handleAddToCart(product)} 
+                            className="p-2.5 bg-[#181d29] hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded-xl border border-slate-800/80 transition"
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Pagination */}
           <div className="flex items-center justify-center gap-2 pt-8">

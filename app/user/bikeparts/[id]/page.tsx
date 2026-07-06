@@ -3,13 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { Star, ShoppingCart, ShoppingBag, ArrowLeft, Heart, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Header from "../../_components/Header";
 import Footer from "../../../(public)/_components/Footer";
+import { useCart } from "@/context/CartContext";
 import { getProductById, getProductsByCategory } from "@/lib/api/products";
 
 export default function ProductDetailPage() {
   const params = useParams();
+  const router = useRouter();
+  const { addToCart } = useCart();
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -58,6 +61,22 @@ export default function ProductDetailPage() {
     } catch (err) {
       console.error('Failed to fetch related products:', err);
     }
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addToCart({
+      product: product._id || product.id,
+      title: product.title,
+      image: product.images?.[0]?.startsWith('http') ? product.images[0] : `http://localhost:5001${product.images?.[0] || product.image}`,
+      price: parseFloat(product.price),
+      quantity,
+    });
+  };
+
+  const handleBuyNow = () => {
+    handleAddToCart();
+    router.push('/user/checkout');
   };
 
   if (loading) {
@@ -246,14 +265,20 @@ export default function ProductDetailPage() {
               </div>
 
               {/* Add to selection basket */}
-              <button className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 font-bold text-xs h-11 px-4 rounded-xl transition flex items-center justify-center gap-2">
+              <button
+                onClick={handleAddToCart}
+                className="flex-1 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 border border-blue-500/20 font-bold text-xs h-11 px-4 rounded-xl transition flex items-center justify-center gap-2"
+              >
                 <ShoppingCart size={14} /> Add to Cart
               </button>
 
               {/* Immediate Checkout Trigger */}
-              <Link href="/user/checkout" className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs h-11 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/10 text-center">
+              <button
+                onClick={handleBuyNow}
+                className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs h-11 px-4 rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-blue-500/10"
+              >
                 <ShoppingBag size={14} /> Buy Now
-              </Link>
+              </button>
             </div>
           </div>
 

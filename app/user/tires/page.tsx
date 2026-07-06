@@ -13,9 +13,13 @@ import {
 } from "lucide-react";
 import Header from "../_components/Header";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useCart } from "@/context/CartContext";
 import { getProductsByCategory } from "@/lib/api/products";
 
 export default function TiresPage() {
+  const router = useRouter();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -47,9 +51,27 @@ export default function TiresPage() {
     );
   };
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (product: any) => {
+    addToCart({
+      product: product._id || product.id,
+      title: product.title,
+      image: product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`,
+      price: parseFloat(product.price),
+      quantity: 1
+    });
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const handleBuyNow = (product: any) => {
+    addToCart({
+      product: product._id || product.id,
+      title: product.title,
+      image: product.image?.startsWith('http') ? product.image : `http://localhost:5001${product.image}`,
+      price: parseFloat(product.price),
+      quantity: 1
+    });
+    router.push('/user/checkout');
   };
 
   return (
